@@ -12,6 +12,7 @@ export type Game = {
     genres?: string[];
     types?: string[];
     url?: string;
+    imageUrl?: string;
     // other game properties
 };
 

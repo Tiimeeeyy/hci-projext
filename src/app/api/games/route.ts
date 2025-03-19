@@ -26,8 +26,11 @@ export async function GET(request: NextRequest) {
         : [];
 
     // Add search filter
-    const filters = {};
+    const filters = {
+        search: undefined
+    };
     if (search) {
+        // @ts-ignore
         filters.search = search;
     }
 

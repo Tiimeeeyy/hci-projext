@@ -89,59 +89,48 @@ function shuffleArray<T>(array: T[]): T[] {
     return newArray;
 }
 
-// Add to src/lib/db.ts
-export function getGames(
+export async function getGames(
     page: number = 1,
-    limit: number = 20,
-    filters: any = {},
+    limit: number = 10,
+    filters: { search?: string } = {},
     excludeIds: number[] = [],
     randomize: boolean = false
 ) {
-    // Filter out excluded games
-    let filteredGames = games.filter(game => !excludeIds.includes(game.id));
+    // Make sure games are loaded
+    await loadGames();
 
-    // Apply search if provided
-    if (filters.search) {
-        const searchTerm = filters.search.toLowerCase();
-        filteredGames = filteredGames.filter(game => {
-            // Search in name
-            const nameMatch = game.name.toLowerCase().includes(searchTerm);
-            // Search in genres
-            const genreMatch = game.genres?.some(genre =>
-                genre.toLowerCase().includes(searchTerm)
-            );
-            // Search in description
-            const descriptionMatch = game.game_description?.toLowerCase().includes(searchTerm);
+    // Filter games based on search and excludeIds
+    let filteredGames = [...games];
 
-            return nameMatch || genreMatch || descriptionMatch;
-        });
+    // Filter by excludeIds
+    if (excludeIds.length > 0) {
+        filteredGames = filteredGames.filter(game => !excludeIds.includes(game.id));
     }
 
-    // Apply other filters
-    if (filters.genres?.length) {
+    // Filter by search term
+    if (filters.search) {
+        const searchRegex = new RegExp(filters.search, 'i');
         filteredGames = filteredGames.filter(game =>
-            game.genres?.some(genre => filters.genres.includes(genre))
+            searchRegex.test(game.name)
         );
     }
 
-    // Randomize if requested
+    // Get total count before pagination
+    const totalCount = filteredGames.length;
+
+    // Randomize if needed
     if (randomize) {
         filteredGames = shuffleArray(filteredGames);
     }
 
-    // Calculate total before pagination
-    const total = filteredGames.length;
-
     // Apply pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedGames = filteredGames.slice(startIndex, endIndex);
+    const skip = (page - 1) * limit;
+    const paginatedGames = filteredGames.slice(skip, skip + limit);
 
     return {
-        total,
-        page,
-        limit,
-        games: paginatedGames
+        games: paginatedGames,
+        total: totalCount,
+        hasMore: skip + limit < totalCount
     };
 }
 

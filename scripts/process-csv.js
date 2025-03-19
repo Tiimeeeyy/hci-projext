@@ -5,7 +5,7 @@ const {parse} = require('csv-parse/sync');
 
 // Process CSV to JSON during build
 function processCSV() {
-    const csvPath = path.join(process.cwd(), 'data', 'steam-games.csv');
+    const csvPath = path.join(process.cwd(), 'data', 'steam_games.csv');
     const content = fs.readFileSync(csvPath, 'utf-8');
 
     const records = parse(content, {

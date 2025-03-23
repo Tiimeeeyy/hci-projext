@@ -1,4 +1,3 @@
-// src/lib/db.ts
 import fs from 'fs';
 import path from 'path';
 import {parse} from 'csv-parse/sync';
@@ -13,13 +12,11 @@ export type Game = {
     types?: string[];
     url?: string;
     imageUrl?: string;
-    // other game properties
 };
 
 let games: Game[] = [];
 
 export async function loadGames() {
-    // Only load once
     if (games.length > 0) return;
 
     try {
@@ -31,7 +28,6 @@ export async function loadGames() {
             skip_empty_lines: true
         });
 
-        // Filter records to only include those with type "app"
         const filteredRecords = records.filter((record: {
             types: {
                 split: (arg0: string) => {
@@ -45,10 +41,6 @@ export async function loadGames() {
             // @ts-ignore
             return types.includes('app');
         });
-
-        // Assign IDs to each game (index + 1 as ID)
-        // src/lib/db.ts
-        // In the loadGames function, fix the mapping part:
 
         games = filteredRecords.map((record: {
             url: any;
@@ -65,7 +57,6 @@ export async function loadGames() {
             game_description: record.game_description || '',
             original_price: record.original_price || '',
             all_reviews: record.all_reviews || '',
-            // Handle genres correctly
             genres: record.genres?.split(',').map(g => g.trim()) || [],
             types: record.types?.split(',').map(t => t.trim()) || [],
             url: record.url || '' // Fixed the syntax error here
@@ -79,7 +70,6 @@ export async function loadGames() {
     }
 }
 
-// Add this to src/lib/db.ts
 function shuffleArray<T>(array: T[]): T[] {
     const newArray = [...array];
     for (let i = newArray.length - 1; i > 0; i--) {
@@ -96,18 +86,13 @@ export async function getGames(
     excludeIds: number[] = [],
     randomize: boolean = false
 ) {
-    // Make sure games are loaded
     await loadGames();
 
-    // Filter games based on search and excludeIds
     let filteredGames = [...games];
 
-    // Filter by excludeIds
     if (excludeIds.length > 0) {
         filteredGames = filteredGames.filter(game => !excludeIds.includes(game.id));
     }
-
-    // Filter by search term
     if (filters.search) {
         const searchRegex = new RegExp(filters.search, 'i');
         filteredGames = filteredGames.filter(game =>
@@ -115,15 +100,12 @@ export async function getGames(
         );
     }
 
-    // Get total count before pagination
     const totalCount = filteredGames.length;
 
-    // Randomize if needed
     if (randomize) {
         filteredGames = shuffleArray(filteredGames);
     }
 
-    // Apply pagination
     const skip = (page - 1) * limit;
     const paginatedGames = filteredGames.slice(skip, skip + limit);
 

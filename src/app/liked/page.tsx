@@ -41,6 +41,17 @@ export default function LikedPage() {
         }
     }
 
+    const extractSteamIdAndImage = (url: string | undefined): { steamId: string | null, imageUrl: string | null } => {
+        if (!url) return {steamId: null, imageUrl: null};
+
+        const match = url.match(/\/app\/(\d+)/);
+        const steamId = match ? match[1] : null;
+
+        const imageUrl = steamId ? `https://cdn.akamai.steamstatic.com/steam/apps/${steamId}/header.jpg` : null;
+
+        return {steamId, imageUrl};
+    };
+
     return (
         <div className="min-h-screen p-4">
             <header className="flex items-center justify-between mb-6">
@@ -62,18 +73,44 @@ export default function LikedPage() {
                     {likedGames.map((game) => (
                         <div key={game.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
                             <div className="h-40 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                                {game.imageUrl ? (
-                                    <img
-                                        src={game.imageUrl}
-                                        alt={game.name}
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <span className="text-4xl">🎮</span>
-                                )}
+                                {(() => {
+                                    const {steamId, imageUrl} = extractSteamIdAndImage(game.url);
+
+                                    return imageUrl ? (
+                                        <img
+                                            src={imageUrl}
+                                            alt={game.name}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                // Fallback if image fails to load
+                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                e.currentTarget.parentElement!.innerHTML = '<span class="text-4xl">🎮</span>';
+                                            }}
+                                        />
+                                    ) : (
+                                        <span className="text-4xl">🎮</span>
+                                    );
+                                })()}
                             </div>
                             <div className="p-4">
-                                <h2 className="text-xl font-bold mb-2">{game.name}</h2>
+                                <h2 className="text-xl font-bold mb-2">
+                                    {(() => {
+                                        const {steamId} = extractSteamIdAndImage(game.url);
+
+                                        return steamId ? (
+                                            <a
+                                                href={`https://store.steampowered.com/app/${steamId}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                                            >
+                                                {game.name}
+                                            </a>
+                                        ) : (
+                                            game.name
+                                        );
+                                    })()}
+                                </h2>
 
                                 {/* Price */}
                                 <div className="mb-2 text-blue-600 dark:text-blue-400 font-semibold">
@@ -86,8 +123,8 @@ export default function LikedPage() {
                                         {game.genres.map((genre) => (
                                             <span key={genre}
                                                   className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded-full">
-                        {genre}
-                      </span>
+                                                {genre}
+                                            </span>
                                         ))}
                                     </div>
                                 )}
